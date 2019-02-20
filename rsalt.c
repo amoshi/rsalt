@@ -217,7 +217,8 @@ char *expr_form = 0;
 int64_t batch_size = 0;
 char *saltenv = 0;
 json_t *pillar = 0;
-char *test = 0;
+int test = 0;
+int dry_run = 0;
 
 char* iterator(int argc, char **argv, int *i)
 {
@@ -243,6 +244,8 @@ char* iterator(int argc, char **argv, int *i)
 				expr_form = strdup("pillar");
 			else if (!strcmp(argv[*i], "-C"))
 				expr_form = strdup("compound");
+			else if (!strcmp(argv[*i], "--dry-run"))
+				dry_run = 1;
 			else if (	!strcmp(argv[*i], "--batch-size") ||
 					!strcmp(argv[*i], "--batch") ||
 					!strcmp(argv[*i], "-b"))
@@ -257,8 +260,8 @@ char* iterator(int argc, char **argv, int *i)
 				saltenv=strdup(argv[*i]+8);
 			else if (!strncmp(argv[*i], "pillar", 6))
 				pillar=json_loads(argv[*i]+7, strlen(argv[*i])-7, NULL);
-			//else if (!strncmp(argv[*i], "test=True", 9))
-			//	*test=1;
+			else if (!strncmp(argv[*i], "test=True", 9)) {}
+				test=1;
 		}
 		else
 		{
@@ -295,7 +298,7 @@ json_t* rsalt_data_load(int argc, char **argv, auth_data *ad)
 	if (pillar)
 		json_object_set(obj, "pillar", pillar);
 	if (test)
-		json_object_set_new(obj, "test", json_string(test));
+		json_object_set_new(obj, "test", json_true());
 	if (expr_form)
 		json_object_set_new(obj, "expr_form", json_string(expr_form));
 	if (batch_size)
@@ -305,7 +308,10 @@ json_t* rsalt_data_load(int argc, char **argv, auth_data *ad)
 	json_object_set_new(obj, "arg", arg_arr);
 	json_object_set_new(obj, "eauth", json_string(ad->eauth));
 	json_object_set_new(obj, "username", json_string(ad->username));
-	json_object_set_new(obj, "password", json_string(ad->password));
+	if (dry_run)
+		json_object_set_new(obj, "password", json_string("XXXXXXXXXXXXXXX"));
+	else
+		json_object_set_new(obj, "password", json_string(ad->password));
 
 	json_t *array = json_array();
 	json_array_append(array, obj);
@@ -409,6 +415,12 @@ int main(int argc, char **argv)
 
         json_t *obj = rsalt_data_load(argc, argv, ad);
 	char *s = json_dumps(obj, 0);
+	if (dry_run)
+	{
+		printf("saltapi: %s\n", ad->saltapi);
+		printf("body: %s\n", s);
+		return 0;
+	}
 
 	char *answ;
 	curl_handler(ad->saltapi, s, &answ);
