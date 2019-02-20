@@ -198,7 +198,7 @@ int64_t curl_handler(char *url, char *body, char **data)
 		CURLcode res = curl_easy_perform(curl);
 		if ( res != CURLE_OK )
 		{
-			printf("error curl_easy_perform()");
+			fprintf(stderr, "api request failed: %s\n", curl_easy_strerror(res));
 			curl_easy_cleanup(curl);
 			return -1;
 		}
@@ -374,6 +374,20 @@ auth_data* conf_read(char *context, char *filepath)
 	}
 	fclose(fd);
 
+	char *tmp;
+	tmp = getenv("RSALT_SALTAPI");
+	if (tmp)
+		saltapi = tmp;
+	tmp = getenv("RSALT_EAUTH");
+	if (tmp)
+		eauth = tmp;
+	tmp = getenv("RSALT_USERNAME");
+	if (tmp)
+		username = tmp;
+	tmp = getenv("RSALT_PASSWORD");
+	if (tmp)
+		password = tmp;
+
 	if (!saltapi)
 	{
 		fprintf(stderr, "<saltapi> key not found for context %s\n", context);
@@ -424,8 +438,16 @@ int main(int argc, char **argv)
 
 	char *answ;
 	curl_handler(ad->saltapi, s, &answ);
+	if (!answ)
+	{
+		fprintf(stderr, "no answer\n");
+		return 4;
+	}
 	if (strlen(answ)<1)
+	{
 		fprintf(stderr, "empty answer\n");
+		return 3;
+	}
 
 	json_t *root = load_json(answ);
 	if (root) {
