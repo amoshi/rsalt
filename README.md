@@ -40,3 +40,15 @@ rsalt -L 'srv1.example.com,srv2.example.com' grains.get cpuarch
 ```
 rsalt --context othersalt srv?.example.com grains.get cpuarch
 ```
+
+### match output (support extend POSIX regex)
+```
+rsalt --context othersalt srv?.example.com state.sls redis --showids
+rsalt --context othersalt srv?.example.com state.sls redis --match 'file__-/etc/redis.conf__-/etc/redis.conf__-managed.changes'
+rsalt --context othersalt srv?.example.com state.sls redis --match 'file__-/etc/redis.conf__-/etc/redis.conf__-managed.changes|file__-/etc/redis.conf__-/etc/redis.conf__-managed.comments'
+```
+
+### for debugging
+```
+rsalt --context othersalt srv?.example.com state.sls redis --dry-run
+```
