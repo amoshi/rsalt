@@ -367,9 +367,8 @@ char* iterator(int argc, char **argv, int *i)
 	return 0;
 }
 
-json_t* rsalt_data_load(int argc, char **argv, auth_data *ad)
+json_t* rsalt_data_load(int argc, char **argv, auth_data *ad, int i)
 {
-	int i = 1;
 	char *tgt = 0;
 	char *fun = 0;
 	char *arg = 0;
@@ -517,13 +516,23 @@ auth_data* conf_read(char *context, char *filepath)
 
 int main(int argc, char **argv)
 {
-	auth_data *ad = conf_read("default", "/etc/rsalt.conf");
+	char *context;
+	int reargc = 1;
+	if (!strncmp(argv[1],"--context", 9))
+	{
+		context = argv[2];
+		reargc = 3;
+	}
+	else
+		context = strdup("default");
+
+	auth_data *ad = conf_read(context, "/etc/rsalt.conf");
 	if (!ad)
 		return 2;
 	if (argc < 3)
 		return 1;
 
-        json_t *obj = rsalt_data_load(argc, argv, ad);
+        json_t *obj = rsalt_data_load(argc, argv, ad, reargc);
 	char *s = json_dumps(obj, 0);
 	if (dry_run)
 	{
