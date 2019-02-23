@@ -14,7 +14,10 @@ typedef struct auth_data
 	char *password;
 } auth_data;
 
-void print_json_aux(json_t *element, int indent, char *color);
+regex_t *regex_match;
+int showids;
+
+void print_json_aux(json_t *element, int indent, char *color, char *template, int match);
 
 
 void print_json_indent(int indent) {
@@ -26,38 +29,92 @@ const char *json_plural(int count) {
 	return count == 1 ? "" : "s";
 }
 
-void print_json_object(json_t *element, int indent) {
+void print_json_object(json_t *element, int indent, char *template) {
 	size_t size;
 	const char *key;
 	json_t *value;
+	if (template)
+		strncat(template, ".", 1);
 
 	size = json_object_size(element);
 
-	json_object_foreach(element, key, value) {
-		print_json_indent(indent);
-	if (strcmp(key, "return"))
+	json_object_foreach(element, key, value)
+	{
+		char *template2 = 0;
+		if (regex_match)
 		{
-			if (json_typeof(value) == JSON_OBJECT)
-				printf("\e[33m%s:\e[0m\n", key);
-			else if (json_typeof(value) == JSON_ARRAY)
-				printf("\e[33m%s:\e[0m\n", key);
+			if (indent > 4)
+			{
+				template2 = malloc(1000);
+				if (template)
+					strlcpy(template2, template, 1000);
+
+				uint64_t j;
+				strncat(template2, key, strlen(key));
+				for (j=0; j<strlen(template2); j++)
+					if (template2[j] == '|')
+						template2[j] = '_';
+
+				if (showids)
+				{
+					printf("key %s\n", key);
+					printf("%s\n", template2);
+				}
+
+				int reti = regexec(regex_match, template2, 0, NULL, 0);
+				if (reti)
+				{
+					// NOT MATCHED
+					print_json_aux(value, indent + 2, "\e[1;32m", template2, 0);
+				}
+				else
+				{
+					// MATCHED
+					if (strcmp(key, "return") && strcmp(key, "pchanges"))
+					{
+						print_json_indent(indent);
+						if (json_typeof(value) == JSON_OBJECT)
+							printf("\e[33m%s:\e[0m\n", key);
+						else if (json_typeof(value) == JSON_ARRAY)
+							printf("\e[33m%s:\e[0m\n", key);
+						else
+							printf("\e[33m%s:\e[0m ", key);
+					}
+
+					print_json_aux(value, indent + 2, "\e[1;32m", template2, 1);
+				}
+			}
 			else
-				printf("\e[33m%s:\e[0m ", key);
+				print_json_aux(value, indent + 2, "\e[1;32m", template2, 0);
+		}
+		else
+		{
+			if (strcmp(key, "return") && strcmp(key, "pchanges"))
+			{
+				print_json_indent(indent);
+				if (json_typeof(value) == JSON_OBJECT)
+					printf("\e[33m%s:\e[0m\n", key);
+				else if (json_typeof(value) == JSON_ARRAY)
+					printf("\e[33m%s:\e[0m\n", key);
+				else
+					printf("\e[33m%s:\e[0m ", key);
+			}
+			print_json_aux(value, indent + 2, "\e[1;32m", template2, 0);
 		}
 
-		print_json_aux(value, indent + 2, "\e[1;32m");
+		if (template2)
+			free(template2);
 	}
-
 }
 
-void print_json_array(json_t *element, int indent)
+void print_json_array(json_t *element, int indent, char* template, int match)
 {
 	size_t i;
 	size_t size = json_array_size(element);
 	print_json_indent(indent);
 
 	for (i = 0; i < size; i++) {
-		print_json_aux(json_array_get(element, i), indent + 2, NULL);
+		print_json_aux(json_array_get(element, i), indent + 2, NULL, template, match);
 	}
 }
 
@@ -117,29 +174,54 @@ json_t *load_json(const char *text)
 	}
 }
 
-void print_json_aux(json_t *element, int indent, char *color)
+void print_json_aux(json_t *element, int indent, char *color, char *template, int match)
 {
 	switch (json_typeof(element)) {
 		case JSON_OBJECT:
-			print_json_object(element, indent);
+			print_json_object(element, indent, template);
 			break;
 		case JSON_ARRAY:
-			print_json_array(element, indent);
+			print_json_array(element, indent, template, match);
 			break;
 		case JSON_STRING:
-			print_json_string(element, color);
+			if (regex_match)
+				if (match)
+					print_json_string(element, color);
+				else {}
+			else
+				print_json_string(element, color);
 			break;
 		case JSON_INTEGER:
-			print_json_integer(element, indent);
+			if (regex_match)
+				if (match)
+					print_json_integer(element, indent);
+				else {}
+			else
+				print_json_integer(element, indent);
 			break;
 		case JSON_REAL:
-			print_json_real(element, indent);
+			if (regex_match)
+				if (match)
+					print_json_real(element, indent);
+				else {}
+			else
+				print_json_real(element, indent);
 			break;
 		case JSON_TRUE:
-			print_json_true(element, indent);
+			if (regex_match)
+				if (match)
+					print_json_true(element, indent);
+				else {}
+			else
+				print_json_true(element, indent);
 			break;
 		case JSON_FALSE:
-			print_json_false(element, indent);
+			if (regex_match)
+				if (match)
+					print_json_false(element, indent);
+				else {}
+			else
+				print_json_false(element, indent);
 			break;
 		default:
 			  break;
@@ -246,6 +328,20 @@ char* iterator(int argc, char **argv, int *i)
 				expr_form = strdup("compound");
 			else if (!strcmp(argv[*i], "--dry-run"))
 				dry_run = 1;
+			else if (!strcmp(argv[*i], "--showids"))
+				showids = 1;
+			else if (!strcmp(argv[*i], "--match"))
+			{
+				++(*i);
+				regex_match = malloc(sizeof(*regex_match));
+				int reti = regcomp(regex_match, argv[*i], REG_EXTENDED);
+				if (reti)
+				{
+					fprintf(stderr, "Could not compile regex: %s\n", argv[*i]);
+					exit(1);
+				}
+
+			}
 			else if (	!strcmp(argv[*i], "--batch-size") ||
 					!strcmp(argv[*i], "--batch") ||
 					!strcmp(argv[*i], "-b"))
@@ -450,8 +546,9 @@ int main(int argc, char **argv)
 	}
 
 	json_t *root = load_json(answ);
-	if (root) {
-		print_json_aux(root, 0, NULL);
+	if (root)
+	{
+		print_json_aux(root, 0, NULL, NULL, 0);
 		json_decref(root);
 	}
 	return 0;
