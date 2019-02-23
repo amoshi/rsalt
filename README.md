@@ -4,7 +4,8 @@ remote saltstack execution tool
 ## requirements
 - Works via rest\_wsgi salt-api interface or other implementation: https://github.com/amoshi/salt-yapi
 - jansson (json library in C) library required.
-- multi-saltstack configuration (routed by contexts in /etc/rsalt.conf ini file)
+- libcurl required.
+- multi-saltstack configuration (routed by contexts in /etc/rsalt.conf ini file).
 
 ## config file (/etc/rsalt.conf) examples:
 [default]
