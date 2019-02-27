@@ -374,11 +374,14 @@ json_t* rsalt_data_load(int argc, char **argv, auth_data *ad, int i)
 	char *tgt = 0;
 	char *fun = 0;
 	char *arg = 0;
+	char *arg2 = 0;
 	tgt = iterator(argc, argv, &i);
 	i++;
 	fun = iterator(argc, argv, &i);
 	i++;
 	arg = iterator(argc, argv, &i);
+	i++;
+	arg2 = iterator(argc, argv, &i);
 	i++;
 	iterator(argc, argv, &i);
 
@@ -390,6 +393,8 @@ json_t* rsalt_data_load(int argc, char **argv, auth_data *ad, int i)
 		json_object_set_new(obj, "fun", json_string(fun));
 	if (arg)
 		json_array_append_new(arg_arr, json_string(arg));
+	if (arg2)
+		json_array_append_new(arg_arr, json_string(arg2));
 	if (saltenv)
 		json_array_append_new(arg_arr, json_string(saltenv));
 	if (pillar)
@@ -518,6 +523,12 @@ auth_data* conf_read(char *context, char *filepath)
 
 int main(int argc, char **argv)
 {
+	if (argc < 3)
+	{
+		puts("no args");
+		return 1;
+	}
+
 	char *context;
 	int reargc = 1;
 	if (!strncmp(argv[1],"--context", 9))
@@ -531,8 +542,6 @@ int main(int argc, char **argv)
 	auth_data *ad = conf_read(context, "/etc/rsalt.conf");
 	if (!ad)
 		return 2;
-	if (argc < 3)
-		return 1;
 
         json_t *obj = rsalt_data_load(argc, argv, ad, reargc);
 	char *s = json_dumps(obj, 0);
