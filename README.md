@@ -8,6 +8,7 @@ remote saltstack execution tool
 - multi-saltstack configuration (routed by contexts in /etc/rsalt.conf ini file).
 
 ## config file (/etc/rsalt.conf) examples:
+```
 [default]
 saltapi=http://saltstack.example.com:8080/
 eauth=pam
@@ -19,6 +20,7 @@ saltapi=http://basicuser:basicpassword@saltstack2.example.com:8080/
 eauth=ldap
 username=saltuser
 password=saltpassword
+```
 
 ## configuration from env (for CI):
 ```
