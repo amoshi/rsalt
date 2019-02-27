@@ -8,3 +8,6 @@ linux:
 
 clean:
 	rm rsalt
+
+install:
+	cp -a rsalt /usr/bin/rsalt
