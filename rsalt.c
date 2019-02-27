@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <jansson.h>
 #include <string.h>
 #include <curl/curl.h>
@@ -32,14 +33,12 @@ const char *json_plural(int count) {
 	return count == 1 ? "" : "s";
 }
 
-void print_json_object(json_t *element, int indent, char *template) {
-	size_t size;
+void print_json_object(json_t *element, int indent, char *template)
+{
 	const char *key;
 	json_t *value;
 	if (template)
 		strncat(template, ".", 1);
-
-	size = json_object_size(element);
 
 	json_object_foreach(element, key, value)
 	{
@@ -52,7 +51,7 @@ void print_json_object(json_t *element, int indent, char *template) {
 				if (template)
 					strlcpy(template2, template, 1000);
 
-				uint64_t j;
+				size_t j;
 				strncat(template2, key, strlen(key));
 				for (j=0; j<strlen(template2); j++)
 					if (template2[j] == '|')
