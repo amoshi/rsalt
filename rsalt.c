@@ -5,6 +5,9 @@
 #include <curl/curl.h>
 #include <regex.h>
 #include <curl/curl.h>
+#ifdef __linux__
+#include <bsd/string.h>
+#endif
 
 typedef struct auth_data
 {
