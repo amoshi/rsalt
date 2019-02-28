@@ -427,7 +427,7 @@ auth_data* conf_read(char *context, char *filepath)
 
 	FILE *fd = fopen(filepath, "r");
 	if (!fd)
-		return 0;
+		puts("file /etc/rsalt.conf not found, using envs");
 
 	reti = regcomp(&regex, "^\[[^]]*", 0);
 	if (reti) {
