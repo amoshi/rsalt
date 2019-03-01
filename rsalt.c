@@ -424,57 +424,62 @@ auth_data* conf_read(char *context, char *filepath)
 {
 	regex_t regex;
 	int reti;
-
-	FILE *fd = fopen(filepath, "r");
-	if (!fd)
-		puts("file /etc/rsalt.conf not found, using envs");
-
-	reti = regcomp(&regex, "^\[[^]]*", 0);
-	if (reti) {
-		fprintf(stderr, "Could not compile regex\n");
-		exit(1);
-	}
-
-	char buf[10000];
-	int matched = 0;
-	while (fgets(buf, 10000, fd))
-	{
-		buf[strlen(buf)-1] = 0;
-		reti = regexec(&regex, buf, 0, NULL, 0);
-		if (!reti)
-		{
-			if (!strncmp(buf+1, context, strlen(context)))
-			{
-				matched = 1;
-				break;
-			}
-		}
-	}
-
-	if (!matched)
-		fprintf(stderr, "context %s not found in file %s\n", context, filepath);
-
 	char *saltapi = 0;
 	char *eauth = 0;
 	char *username = 0;
 	char *password = 0;
-	while (fgets(buf, 10000, fd))
-	{
-		buf[strlen(buf)-1] = 0;
-		reti = regexec(&regex, buf, 0, NULL, 0);
-		if (!reti)
-			break;
 
-		if (!strncmp(buf, "saltapi", strlen("saltapi")))
-			saltapi = strdup(buf+8);
-		else if (!strncmp(buf, "eauth", strlen("eauth")))
-			eauth = strdup(buf+6);
-		else if (!strncmp(buf, "username", strlen("username")))
-			username = strdup(buf+9);
-		else if (!strncmp(buf, "password", strlen("password")))
-			password = strdup(buf+9);
+	FILE *fd = fopen(filepath, "r");
+	if (!fd)
+	{
+		puts("file /etc/rsalt.conf not found, using envs");
 	}
-	fclose(fd);
+	else
+	{
+		reti = regcomp(&regex, "^\[[^]]*", 0);
+		if (reti) {
+			fprintf(stderr, "Could not compile regex\n");
+			exit(1);
+		}
+
+		char buf[10000];
+		int matched = 0;
+		while (fgets(buf, 10000, fd))
+		{
+			buf[strlen(buf)-1] = 0;
+			reti = regexec(&regex, buf, 0, NULL, 0);
+			if (!reti)
+			{
+				if (!strncmp(buf+1, context, strlen(context)))
+				{
+					matched = 1;
+					break;
+				}
+			}
+		}
+
+		if (!matched)
+			fprintf(stderr, "context %s not found in file %s\n", context, filepath);
+
+		while (fgets(buf, 10000, fd))
+		{
+			buf[strlen(buf)-1] = 0;
+			reti = regexec(&regex, buf, 0, NULL, 0);
+			if (!reti)
+				break;
+
+			if (!strncmp(buf, "saltapi", strlen("saltapi")))
+				saltapi = strdup(buf+8);
+			else if (!strncmp(buf, "eauth", strlen("eauth")))
+				eauth = strdup(buf+6);
+			else if (!strncmp(buf, "username", strlen("username")))
+				username = strdup(buf+9);
+			else if (!strncmp(buf, "password", strlen("password")))
+				password = strdup(buf+9);
+		}
+		fclose(fd);
+		regfree(&regex);
+	}
 
 	char *tmp;
 	tmp = getenv("RSALT_SALTAPI");
@@ -492,22 +497,22 @@ auth_data* conf_read(char *context, char *filepath)
 
 	if (!saltapi)
 	{
-		fprintf(stderr, "<saltapi> key not found for context %s\n", context);
+		fprintf(stderr, "<saltapi> key not found for context %s or env\n", context);
 		return 0;
 	}
 	else if (!eauth)
 	{
-		fprintf(stderr, "<eauth> key not found for context %s\n", context);
+		fprintf(stderr, "<eauth> key not found for context %s\n or env", context);
 		return 0;
 	}
 	if (!username)
 	{
-		fprintf(stderr, "<username> key not found for context %s\n", context);
+		fprintf(stderr, "<username> key not found for context %s or env\n", context);
 		return 0;
 	}
 	if (!password)
 	{
-		fprintf(stderr, "<password> key not found for context %s\n", context);
+		fprintf(stderr, "<password> key not found for context %s or env\n", context);
 		return 0;
 	}
 
@@ -517,7 +522,6 @@ auth_data* conf_read(char *context, char *filepath)
 	ad->username = username;
 	ad->password = password;
 
-	regfree(&regex);
 	return ad;
 }
 
