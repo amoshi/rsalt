@@ -358,7 +358,7 @@ char* iterator(int argc, char **argv, int *i)
 				saltenv=strdup(argv[*i]+8);
 			else if (!strncmp(argv[*i], "pillar", 6))
 				pillar=json_loads(argv[*i]+7, strlen(argv[*i])-7, NULL);
-			else if (!strncmp(argv[*i], "test=True", 9)) {}
+			else if (!strncmp(argv[*i], "test=True", 9))
 				test=1;
 		}
 		else
@@ -400,7 +400,10 @@ json_t* rsalt_data_load(int argc, char **argv, auth_data *ad, int i)
 	if (pillar)
 		json_object_set(obj, "pillar", pillar);
 	if (test)
+	{
+		printf ("test=1\n");
 		json_object_set_new(obj, "test", json_true());
+	}
 	if (expr_form)
 		json_object_set_new(obj, "expr_form", json_string(expr_form));
 	if (batch_size)
