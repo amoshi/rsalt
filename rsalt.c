@@ -399,8 +399,8 @@ json_t* rsalt_data_load(int argc, char **argv, auth_data *ad, int i)
 		json_array_append_new(arg_arr, json_string(saltenv));
 	if (pillar)
 	{
-		json_object_set_new(obj, "kwargs", json_loads("{}", 2, NULL));
-		json_t *kwargs = json_object_get(obj, "kwargs");
+		json_object_set_new(obj, "kwarg", json_loads("{}", 2, NULL));
+		json_t *kwargs = json_object_get(obj, "kwarg");
 		json_object_set(kwargs, "pillar", pillar);
 	}
 	if (test)
