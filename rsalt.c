@@ -582,6 +582,7 @@ int main(int argc, char **argv)
 	else
 	{
 		printf("\e[33mResponse:\e[0m\n\e[1;35m%s\e[0m\n", answ);
+		return 1;
 	}
 	return 0;
 }
