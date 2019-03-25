@@ -20,8 +20,9 @@ typedef struct auth_data
 
 regex_t *regex_match;
 int showids;
+int exitcode;
 
-void print_json_aux(json_t *element, int indent, char *color, char *template, int match);
+void print_json_aux(json_t *element, int indent, char *color, char *template, int match, int result);
 
 
 void print_json_indent(int indent) {
@@ -43,6 +44,10 @@ void print_json_object(json_t *element, int indent, char *template)
 	json_object_foreach(element, key, value)
 	{
 		char *template2 = 0;
+		int result = 0;
+		if (!strcmp(key, "result"))
+			result = 1;
+
 		if (regex_match)
 		{
 			if (indent > 4)
@@ -67,7 +72,7 @@ void print_json_object(json_t *element, int indent, char *template)
 				if (reti)
 				{
 					// NOT MATCHED
-					print_json_aux(value, indent + 2, "\e[1;32m", template2, 0);
+					print_json_aux(value, indent + 2, "\e[1;32m", template2, 0, result);
 				}
 				else
 				{
@@ -83,11 +88,11 @@ void print_json_object(json_t *element, int indent, char *template)
 							printf("\e[33m%s:\e[0m ", key);
 					}
 
-					print_json_aux(value, indent + 2, "\e[1;32m", template2, 1);
+					print_json_aux(value, indent + 2, "\e[1;32m", template2, 0, result);
 				}
 			}
 			else
-				print_json_aux(value, indent + 2, "\e[1;32m", template2, 0);
+				print_json_aux(value, indent + 2, "\e[1;32m", template2, 0, 0);
 		}
 		else
 		{
@@ -101,7 +106,7 @@ void print_json_object(json_t *element, int indent, char *template)
 				else
 					printf("\e[33m%s:\e[0m ", key);
 			}
-			print_json_aux(value, indent + 2, "\e[1;32m", template2, 0);
+			print_json_aux(value, indent + 2, "\e[1;32m", template2, 0, result);
 		}
 
 		if (template2)
@@ -116,7 +121,7 @@ void print_json_array(json_t *element, int indent, char* template, int match)
 	print_json_indent(indent);
 
 	for (i = 0; i < size; i++) {
-		print_json_aux(json_array_get(element, i), indent + 2, NULL, template, match);
+		print_json_aux(json_array_get(element, i), indent + 2, NULL, template, match, 0);
 	}
 }
 
@@ -153,11 +158,13 @@ void print_json_true(json_t *element, int indent)
 	printf("\e[1;35mTrue\e[0m\n");
 }
 
-void print_json_false(json_t *element, int indent)
+void print_json_false(json_t *element, int indent, int result)
 {
 	(void)element;
 	print_json_indent(indent);
 	printf("\e[1;31mFalse\e[0m\n");
+	if (result)
+		exitcode = 2;
 }
 
 json_t *load_json(const char *text)
@@ -176,7 +183,7 @@ json_t *load_json(const char *text)
 	}
 }
 
-void print_json_aux(json_t *element, int indent, char *color, char *template, int match)
+void print_json_aux(json_t *element, int indent, char *color, char *template, int match, int result)
 {
 	switch (json_typeof(element)) {
 		case JSON_OBJECT:
@@ -220,10 +227,10 @@ void print_json_aux(json_t *element, int indent, char *color, char *template, in
 		case JSON_FALSE:
 			if (regex_match)
 				if (match)
-					print_json_false(element, indent);
+					print_json_false(element, indent, result);
 				else {}
 			else
-				print_json_false(element, indent);
+				print_json_false(element, indent, result);
 			break;
 		default:
 			  break;
@@ -284,7 +291,7 @@ int64_t curl_handler(char *url, char *body, char **data)
 		{
 			fprintf(stderr, "api request failed: %s\n", curl_easy_strerror(res));
 			curl_easy_cleanup(curl);
-			return -1;
+			exit(3);
 		}
 
 		data[0] = s.ptr;
@@ -537,6 +544,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	exitcode = 0;
 	char *context;
 	int reargc = 1;
 	if (!strncmp(argv[1],"--context", 9))
@@ -576,7 +584,7 @@ int main(int argc, char **argv)
 	json_t *root = load_json(answ);
 	if (root)
 	{
-		print_json_aux(root, 0, NULL, NULL, 0);
+		print_json_aux(root, 0, NULL, NULL, 0, 0);
 		json_decref(root);
 	}
 	else
@@ -584,5 +592,5 @@ int main(int argc, char **argv)
 		printf("\e[33mResponse:\e[0m\n\e[1;35m%s\e[0m\n", answ);
 		return 1;
 	}
-	return 0;
+	return exitcode;
 }
