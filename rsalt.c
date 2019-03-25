@@ -404,10 +404,7 @@ json_t* rsalt_data_load(int argc, char **argv, auth_data *ad, int i)
 		json_object_set(kwargs, "pillar", pillar);
 	}
 	if (test)
-	{
-		printf ("test=1\n");
 		json_object_set_new(obj, "test", json_true());
-	}
 	if (expr_form)
 		json_object_set_new(obj, "expr_form", json_string(expr_form));
 	if (batch_size)
@@ -567,12 +564,12 @@ int main(int argc, char **argv)
 	curl_handler(ad->saltapi, s, &answ);
 	if (!answ)
 	{
-		fprintf(stderr, "no answer\n");
+		fprintf(stderr, "no response\n");
 		return 4;
 	}
 	if (strlen(answ)<1)
 	{
-		fprintf(stderr, "empty answer\n");
+		fprintf(stderr, "empty response\n");
 		return 3;
 	}
 
@@ -581,6 +578,10 @@ int main(int argc, char **argv)
 	{
 		print_json_aux(root, 0, NULL, NULL, 0);
 		json_decref(root);
+	}
+	else
+	{
+		printf("\e[33mResponse:\e[0m\n\e[1;35m%s\e[0m\n", answ);
 	}
 	return 0;
 }
