@@ -306,6 +306,7 @@ int64_t curl_handler(char *url, char *body, char **data)
 
 char *expr_form = 0;
 int64_t batch_size = 0;
+int64_t batch_wait = 0;
 char *saltenv = 0;
 json_t *pillar = 0;
 int test = 0;
@@ -357,6 +358,11 @@ char* iterator(int argc, char **argv, int *i)
 			{
 				++(*i);
 				batch_size = atoll(argv[*i]);
+			}
+			else if (	!strcmp(argv[*i], "--batch-wait"))
+			{
+				++(*i);
+				batch_wait = atoll(argv[*i]);
 			}
 		}
 		else if (strstr(argv[*i], "="))
@@ -416,6 +422,8 @@ json_t* rsalt_data_load(int argc, char **argv, auth_data *ad, int i)
 		json_object_set_new(obj, "expr_form", json_string(expr_form));
 	if (batch_size)
 		json_object_set_new(obj, "batch-size", json_integer(batch_size));
+	if (batch_wait)
+		json_object_set_new(obj, "batch-wait", json_integer(batch_wait));
 	
 	json_object_set_new(obj, "client", json_string("local"));
 	json_object_set_new(obj, "arg", arg_arr);
