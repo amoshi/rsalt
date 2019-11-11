@@ -282,8 +282,8 @@ int64_t curl_handler(char *url, char *body, char **data)
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 300000L);
-		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 300000L);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 3600000L);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 60000L);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
 		CURLcode res = curl_easy_perform(curl);
