@@ -1,0 +1,6 @@
+[requires]
+jansson/2.13.1
+libcurl/7.86.0
+
+[generators]
+compiler_args

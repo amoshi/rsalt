@@ -2,10 +2,16 @@
 remote saltstack execution tool
 
 ## requirements
+- cmake, c compiler, conan needs for build
+- To install conan use: pip3 install conan
 - Works via rest\_wsgi salt-api interface or other implementation: https://github.com/amoshi/salt-yapi
-- jansson (json library in C) library required.
-- libcurl required.
 - multi-saltstack configuration (routed by contexts in /etc/rsalt.conf ini file).
+
+## build:
+```
+conan install . --build=missing
+make install
+```
 
 ## config file (/etc/rsalt.conf) examples:
 ```
