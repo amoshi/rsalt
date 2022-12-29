@@ -9,6 +9,7 @@ remote saltstack execution tool
 
 ## build:
 ```
+pip3 install conan
 conan install . --build=missing
 make install
 ```
