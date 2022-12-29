@@ -1,10 +1,10 @@
 all: build
 
 build:
-	cc @conanbuildinfo.args -Wall -Wextra -Werror rsalt.c -o rsalt
+	cc rsalt.c -ljansson -lcurl -Wall -Wextra -Werror -o rsalt
 
 linux:
-	cc @conanbuildinfo.args -Wall -Wextra -Werror rsalt.c -o rsalt
+	cc rsalt.c -lbsd -ljansson -lcurl -Wall -Wextra -Werror -o rsalt
 
 clean:
 	rm rsalt
